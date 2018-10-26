@@ -1,0 +1,42 @@
+@mixin animated($duraction: 0.3s) {
+	-webkit-transition: $duraction;
+	-o-transition: $duraction;
+	transition: $duraction;
+}
+
+@mixin transform($string) {
+	-webkit-transform: $string;
+	-ms-transform: $string;
+	transform: $string;
+}
+
+@mixin calc($property, $expression...) { 
+  #{$property}: -o-calc(#{$expression}); 
+  #{$property}: -webkit-calc(#{$expression}); 
+  #{$property}: calc(#{$expression}); 
+} 
+
+@mixin text-shadow(){
+	text-shadow: 0 1px 1px rgba(0,0,0,0.75);
+}
+
+@mixin flex($align: top){
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-align-items: $align;
+    -webkit-box-align: $align;
+        -ms-flex-align: $align;
+            align-items: $align;
+    -webkit-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+}
+
+@mixin flex-item($col: 1){
+	-webkit-box-flex: $col;
+    -webkit-flex: $col;
+    -ms-flex: $col;
+    flex: $col;
+}

@@ -1,0 +1,49 @@
+@-webkit-keyframes rotate {
+    0% {
+        @include transform(rotate(0))
+    }
+    100% {
+        @include transform(rotate(360deg))
+    }
+}
+
+@keyframes rotate {
+    0% {
+        @include transform(rotate(0));
+        opacity: 1;
+    }
+    100% {
+        @include transform(rotate(360deg));
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes ring {
+    0% {
+        @include transform(rotate(0deg))
+    }
+    33.333333%{
+    	@include transform(rotate(5deg))
+    }
+    66.666666%{
+    	@include transform(rotate(0deg))
+    }
+    100% {
+        @include transform(rotate(-5deg))
+    }
+}
+
+@keyframes ring {
+    0% {
+        @include transform(rotate(0deg))
+    }
+    33.333333%{
+    	@include transform(rotate(5deg))
+    }
+    66.666666%{
+    	@include transform(rotate(0deg))
+    }
+    100% {
+        @include transform(rotate(-5deg))
+    }
+}
