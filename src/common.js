@@ -4,5 +4,6 @@ let image = new JoyDevision({
     lineColor: 'white',
     background: 'black',
     selector: '#canvas',
-    pointsCount: 200
+    pointsCount: 100,
+    renderTime: 10
 });

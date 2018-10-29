@@ -5,7 +5,8 @@ class JoyDevision{
             linesCount: props && props.linesCount ? props.linesCount : 60,
             lineWidth: props && props.lineWidth ? props.lineWidth : 1.5,
             background: props && props.background ? props.background : '#000000',            
-            pointsCount: props && props.pointsCount ? props.pointsCount : 100,            
+            pointsCount: props && props.pointsCount ? props.pointsCount : 100,
+            renderTime: props && props.renderTime ? props.renderTime : 10,
             canvas: (props && props.selector && document.querySelector(props.selector)) ? 
                     document.querySelector(props.selector) : 
                     false,           
@@ -16,6 +17,7 @@ class JoyDevision{
             points: [],
         }
         this.init();
+        this.renderLoop = false;
     }   
 
     renderBackground(){
@@ -32,60 +34,107 @@ class JoyDevision{
             rect: {
                 x: {
                     start: offset.x,
-                    end: canvas.width - offset.x
+                    end: canvas.clientWidth - offset.x
                 },
                 y: {
                     start: offset.y,
-                    end: canvas.height - offset.y
+                    end: canvas.clientHeight - offset.y
                 }
             }
-        }, false, false)
+        })
     }
 
-    renderLines(){
-        this.calcRect();
+    renderPoints(){
         let {
-                context, 
-                linesCount, 
-                pointsCount, 
-                rect,
-                lineColor,
-                lineWidth,
-                background,
-                points
-            } = this.state,
-            pointsNew = [];
-        let pointPeriod = (rect.x.end - rect.x.start) / pointsCount,
-            linePeriod = (rect.y.end - rect.y.start) / linesCount,
-            x = rect.x.start,
-            y = rect.y.start;
+            context,
+            points,
+            background,
+            lineColor,
+            lineWidth
+        } = this.state;
         context.fillStyle = background;
         context.strokeStyle = lineColor;
         context.lineWidth = lineWidth;
-        for (let  i = 0; i < linesCount; i++) {
-            let row = []
+        
+        for (let  i = 0; i < points.length; i++) {
             context.beginPath();
-            for (let  j = 0; j < pointsCount; j++) {   
-                let noiseddY = y - this.calcNoise(j, pointsCount);
-                row.push({
-                    x:x,
-                    y:noiseddY
-                });
-                context.lineTo(x, noiseddY);
-                x = x + pointPeriod;
+            let row = points[i];
+            context.moveTo(row[0].x, row[0].y);
+            for (let  j = 0; j < row.length; j++) {
+                let col = row[j];
+                context.lineTo(col.x, col.y);
             }
             context.fill();
             context.stroke();
-            x = rect.x.start;
-            y = y + linePeriod;
-            context.moveTo(x, y);
-            pointsNew.push(row);
         }
-        if(!points.length){
+    }
+
+    movePoints(){
+        let {points} = this.state;
+        return new Promise((resolve, reject) => {
+            for (let  i = 0; i < points.length; i++) {
+                let row = points[i];
+                for (let  j = 0; j < row.length; j++) {
+                    let current = row[j],
+                        prev = row[j - 1],
+                        next = row[j + 1];
+                    points[i][j].y = (prev && next) ?
+                        this.makeSmooth(
+                            prev.y, 
+                            current.y, 
+                            next.y)
+                        :   
+                        points[i][j].y;
+                    if(i === points.length-1 && j === row.length - 1){
+                        this.setState({
+                            points: points
+                        })
+                        resolve();
+                    }
+                }
+            }
+        });
+    }
+
+    makeSmooth(prev, current, next){
+        return current - (Math.random() - Math.random());
+    }
+
+    generateData(){
+        return new Promise((resolve, reject) => {
+            this.calcRect();
+            let {
+                linesCount, 
+                pointsCount, 
+                rect
+            } = this.state,
+            points = [],
+            pointPeriod = (rect.x.end - rect.x.start) / pointsCount,
+            linePeriod = (rect.y.end - rect.y.start) / linesCount,
+            x = rect.x.start,
+            y = rect.y.start;
+            for (let  i = 0; i < linesCount; i++) {
+                let row = []
+                for (let j = 0; j < pointsCount; j++) {
+                    let noiseddY = y - this.calcNoise(j, pointsCount);
+                    row.push({
+                        x:x,
+                        y:noiseddY
+                    });
+                    x = x + pointPeriod;
+                }
+                x = rect.x.start;
+                y = y + linePeriod;
+                points.push(row);
+            }
             this.setState({
-                points: pointsNew
+                points: points,
+                pointPeriod: pointPeriod,
+                linePeriod: linePeriod
+            }, () => {
+                resolve(points);
             });
-        }
+        });
     }
 
     calcNoise(x, points){
@@ -103,19 +152,18 @@ class JoyDevision{
         return y;
     }
 
-    setState(props, callback, render = true){
+    setState(props, callback){
         for(let item in props){
             this.state[item] = props[item];
         }
         callback && callback();
-        render && this.render();
     }
 
     initContext(){
         let {canvas} = this.state;
         this.setState({
             context: canvas.getContext('2d')
-        }, false, false);
+        });
     }
 
     clearCanvas() {
@@ -137,18 +185,29 @@ class JoyDevision{
     }
 
     resize(){
-        this.render();
-    }
-
-    runSmooting(){
-        
+        //this.render();
     }
 
     render(){
+        let {renderTime} = this.state;
+        if(this.renderLoop){
+            clearInterval(this.renderLoop);
+            this.renderLoop = false;
+        }
+        this.generateData().then((data) => {
+            this.runRenderLoop();
+            this.renderLoop = setInterval(() => {
+                this.runRenderLoop()
+            }, renderTime);
+        });
+    }
+
+    runRenderLoop(){
         this.clearCanvas();
         this.renderBackground();
-        this.renderLines();
-        this.runSmooting();
+        this.movePoints().then(() => {
+            this.renderPoints();
+        });
     }
 }
 
