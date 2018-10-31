@@ -7,6 +7,7 @@ class JoyDevision{
             background: props && props.background ? props.background : '#000000',            
             pointsCount: props && props.pointsCount ? props.pointsCount : 100,
             renderTime: props && props.renderTime ? props.renderTime : 10,
+            startSmooth: props && props.startSmooth ? props.startSmooth : 0,
             canvas: (props && props.selector && document.querySelector(props.selector)) ? 
                     document.querySelector(props.selector) : 
                     false,           
@@ -97,7 +98,7 @@ class JoyDevision{
     }
 
     makeSmooth(prev, current, next){
-        return current - (Math.random() - Math.random());
+        return (prev +current+next) / 3;
     }
 
     generateData(){
@@ -182,10 +183,27 @@ class JoyDevision{
         window.addEventListener('resize', this.resize.bind(this));
         this.initContext();
         this.render();
+       
     }
 
     resize(){
-        //this.render();
+        this.render();
+    }
+
+    makeIt(func, count = 1){
+        return new Promise((resolve, reject) => {
+            for(let i = 0; i < count; i++){
+                func();
+                if(i >= count) resolve();                
+            }
+        })
+    }
+
+    preRender(){
+        let {startSmooth} = this.state;
+        this.makeIt(this.movePoints.bind(this), startSmooth).then(() => {
+            this.renderPoints();
+        });
     }
 
     render(){
@@ -195,16 +213,18 @@ class JoyDevision{
             this.renderLoop = false;
         }
         this.generateData().then((data) => {
+            this.preRender();
             this.runRenderLoop();
-            this.renderLoop = setInterval(() => {
-                this.runRenderLoop()
-            }, renderTime);
+                        
+            //this.renderLoop = setInterval(() => {
+            //    this.runRenderLoop()
+            //}, renderTime);
         });
     }
 
     runRenderLoop(){
         this.clearCanvas();
-        this.renderBackground();
+        this.renderBackground();        
         this.movePoints().then(() => {
             this.renderPoints();
         });
