@@ -1,6 +1,6 @@
-import JoyDevision from './js/joyDevision.js';
+import JoyDivision from './js/joyDevision.js';
 
-let image = new JoyDevision({
+let image = new JoyDivision({
     lineColor: 'white',
     background: 'black',
     selector: '#canvas',

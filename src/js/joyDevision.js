@@ -1,4 +1,4 @@
-class JoyDevision{
+class JoyDivision{
     constructor(props){
         this.state = {
             lineColor: props && props.lineColor ? props.lineColor : '#ffffff',
@@ -289,4 +289,4 @@ class JoyDevision{
     }
 }
 
-export default JoyDevision;
+export default JoyDivision;
