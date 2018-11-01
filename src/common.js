@@ -1,4 +1,4 @@
-import JoyDivision from './js/joyDevision.js';
+import JoyDivision from './js/joyDivision.js';
 
 let image = new JoyDivision({
     lineColor: 'white',

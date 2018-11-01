@@ -11,7 +11,7 @@ class JoyDivision{
             smooth: props && props.smooth ? props.smooth : 0,
             canvas: (props && props.selector && document.querySelector(props.selector)) ? 
                     document.querySelector(props.selector) : 
-                    false,           
+                    false,
             offset: {
                 x: (props && props.offset && props.offset.x) ? props.offset.x : 40,
                 y: (props && props.offset && props.offset.y) ? props.offset.y : 100,
