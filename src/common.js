@@ -5,8 +5,9 @@ let image = new JoyDevision({
     background: 'black',
     selector: '#canvas',
     pointsCount: 200,
-    linesCount: 50,
-    renderTime: 30,
-    startSmooth: 6,
-    lineWidth: 1.5
+    linesCount: 50,    
+    smooth: 6,
+    lineWidth: 1.5,
+    renderTime: 1000,
+    frames: 60,
 });

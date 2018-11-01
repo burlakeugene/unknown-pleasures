@@ -2,12 +2,13 @@ class JoyDevision{
     constructor(props){
         this.state = {
             lineColor: props && props.lineColor ? props.lineColor : '#ffffff',
-            linesCount: props && props.linesCount ? props.linesCount : 60,
+            linesCount: props && props.linesCount ? props.linesCount : 50,
             lineWidth: props && props.lineWidth ? props.lineWidth : 1.5,
             background: props && props.background ? props.background : '#000000',            
-            pointsCount: props && props.pointsCount ? props.pointsCount : 100,
-            renderTime: props && props.renderTime ? props.renderTime : 10,
-            startSmooth: props && props.startSmooth ? props.startSmooth : 0,
+            pointsCount: props && props.pointsCount ? props.pointsCount : 200,
+            renderTime: props && props.renderTime ? props.renderTime : 1000,
+            frames: props && props.frames ? props.frames : 60,
+            smooth: props && props.smooth ? props.smooth : 0,
             canvas: (props && props.selector && document.querySelector(props.selector)) ? 
                     document.querySelector(props.selector) : 
                     false,           
@@ -17,8 +18,8 @@ class JoyDevision{
             },           
             points: [],
         }
-        this.init();
         this.renderLoop = false;
+        this.init();
     }   
 
     renderBackground(){
@@ -70,34 +71,36 @@ class JoyDevision{
         }
     }
 
-    movePoints(){
-        let {points} = this.state;
+    smoothPoints(points, smooth){
         return new Promise((resolve, reject) => {
-            for (let  i = 0; i < points.length; i++) {
-                let row = points[i];
-                for (let  j = 0; j < row.length; j++) {
-                    let current = row[j],
-                        prev = row[j - 1],
-                        next = row[j + 1];
-                    points[i][j].y = (prev && next) ?
-                        this.makeSmooth(
-                            prev.y, 
-                            current.y, 
-                            next.y)
-                        :   
-                        points[i][j].y;
-                    if(i === points.length-1 && j === row.length - 1){
-                        this.setState({
-                            points: points
-                        })
-                        resolve();
+            for(let k = 0; k <= smooth; k++){
+                for (let i = 0; i < points.length; i++) {
+                    let row = points[i];
+                    for (let  j = 0; j < row.length; j++) {
+                        let current = row[j],
+                            prev = row[j - 1],
+                            next = row[j + 1];
+                        points[i][j].y = (prev && next) ?
+                            this.smoothPoint(
+                                prev.y, 
+                                current.y, 
+                                next.y)
+                            :   
+                            points[i][j].y;
+                        if(
+                                k === smooth && 
+                                i === points.length-1 && 
+                                j === row.length - 1
+                            ){
+                            resolve(points);
+                        }
                     }
                 }
             }
         });
     }
 
-    makeSmooth(prev, current, next){
+    smoothPoint(prev, current, next){
         return (prev +current+next) / 3;
     }
 
@@ -128,13 +131,7 @@ class JoyDevision{
                 y = y + linePeriod;
                 points.push(row);
             }
-            this.setState({
-                points: points,
-                pointPeriod: pointPeriod,
-                linePeriod: linePeriod
-            }, () => {
-                resolve(points);
-            });
+            resolve(points);
         });
     }
 
@@ -182,52 +179,97 @@ class JoyDevision{
         }
         window.addEventListener('resize', this.resize.bind(this));
         this.initContext();
-        this.render();
-       
+        this.build();       
     }
 
     resize(){
-        this.render();
+        this.reBuild();
     }
 
-    makeIt(func, count = 1){
+    reBuild(){
+        this.build();
+    }
+
+    doItTimes(func, times = 1){
         return new Promise((resolve, reject) => {
-            for(let i = 0; i < count; i++){
-                func();
-                if(i >= count) resolve();                
+            for(let i = 0; i < times; i++){
+                func && func();
+                if(i >= times) resolve();                
             }
         })
     }
 
-    preRender(){
-        let {startSmooth} = this.state;
-        this.makeIt(this.movePoints.bind(this), startSmooth).then(() => {
-            this.renderPoints();
-        });
+    firstSmooth(){
+        let {smooth, points} = this.state;
+        return this.smoothPoints(points, smooth).then((points) => {
+            this.setState({
+                points: points
+            })
+        })
     }
 
-    render(){
+    build(){
         let {renderTime} = this.state;
         if(this.renderLoop){
             clearInterval(this.renderLoop);
             this.renderLoop = false;
         }
-        this.generateData().then((data) => {
-            this.preRender();
-            this.runRenderLoop();
-                        
-            //this.renderLoop = setInterval(() => {
-            //    this.runRenderLoop()
-            //}, renderTime);
+        this.generateData().then((points) => {
+            this.setState({
+                points: points
+            });
+            this.firstSmooth().then(() => {
+                this.render();
+            });         
+            this.renderLoop = setInterval(() => {
+                this.loop()
+            }, renderTime);
         });
     }
 
-    runRenderLoop(){
+    runPolymorph(){
+        let {futurePoints, points, frames, renderTime} = this.state;
+        for (let i = 0; i < points.length; i++) {
+            let row = points[i];
+            for (let  j = 0; j < row.length; j++) {
+                let current = row[j],
+                    prev = row[j - 1],
+                    next = row[j + 1];
+                points[i][j].y = (prev && next) ?
+                    this.smoothPoint(
+                        prev.y, 
+                        current.y, 
+                        next.y)
+                    :   
+                    points[i][j].y;
+                if(
+                        k === smooth && 
+                        i === points.length-1 && 
+                        j === row.length - 1
+                    ){
+                    resolve(points);
+                }
+            }
+        }
+    }
+
+    loop(){
+        let {smooth} = this.state;
+        this.generateData().then((points) => {
+            this.smoothPoints(points, smooth).then((points) => {
+                this.setState({
+                    futurePoints: points
+                }, () => {
+                    this.runPolymorph();
+                });
+            })         
+        });
+    }
+
+    render(){
         this.clearCanvas();
         this.renderBackground();        
-        this.movePoints().then(() => {
-            this.renderPoints();
-        });
+        this.renderPoints();
     }
 }
 
