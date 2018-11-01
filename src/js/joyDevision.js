@@ -18,7 +18,7 @@ class JoyDevision{
             },           
             points: [],
         }
-        this.renderLoop = false;
+        this.intervals = {};
         this.init();
     }   
 
@@ -209,10 +209,8 @@ class JoyDevision{
     }
 
     build(){
-        let {renderTime} = this.state;
-        if(this.renderLoop){
-            clearInterval(this.renderLoop);
-            this.renderLoop = false;
+        for(let interval in this.intervals){
+            clearInterval(this.intervals[interval]);
         }
         this.generateData().then((points) => {
             this.setState({
@@ -220,45 +218,63 @@ class JoyDevision{
             });
             this.firstSmooth().then(() => {
                 this.render();
-            });         
-            this.renderLoop = setInterval(() => {
-                this.loop()
-            }, renderTime);
+                this.tick();
+            });
         });
     }
 
     runPolymorph(){
-        let {futurePoints, points, frames, renderTime} = this.state;
-        for (let i = 0; i < points.length; i++) {
-            let row = points[i];
-            for (let  j = 0; j < row.length; j++) {
-                let current = row[j],
-                    prev = row[j - 1],
-                    next = row[j + 1];
-                points[i][j].y = (prev && next) ?
-                    this.smoothPoint(
-                        prev.y, 
-                        current.y, 
-                        next.y)
-                    :   
-                    points[i][j].y;
+        let self = this;
+        let {
+                renderTime, 
+                frames
+            } = this.state,
+            keyframeTime = renderTime / frames,
+            renderedTime = 0,
+            timeStamp = +new Date();
+            this.intervals[timeStamp] = setInterval(() => {
+                renderedTime += keyframeTime;
+                this.runPolymorphTick(keyframeTime);
+                if(renderTime <= renderedTime){
+                    this.tick();
+                    clearInterval(this.intervals[timeStamp]);
+                }
+            }, keyframeTime);
+    }
+
+    runPolymorphTick(keyframeTime){
+        let {
+            futurePoints,
+            oldPoints,
+            points
+        } = this.state;
+        for(let i = 0; i < points.length; i++) {
+            for (let  j = 0; j < points[i].length; j++) {
+                let current = points[i][j].y,
+                    old = oldPoints[i][j].y,
+                    future = futurePoints[i][j].y;
+                points[i][j].y += (future - old) / keyframeTime;
                 if(
-                        k === smooth && 
                         i === points.length-1 && 
-                        j === row.length - 1
+                        j === points[i].length - 1
                     ){
-                    resolve(points);
+                    this.setState({
+                        points: points
+                    }, () => {
+                        this.render();
+                    });
                 }
             }
         }
     }
 
-    loop(){
+    tick(){
         let {smooth} = this.state;
         this.generateData().then((points) => {
             this.smoothPoints(points, smooth).then((points) => {
                 this.setState({
-                    futurePoints: points
+                    futurePoints: points,
+                    oldPoints: this.state.points
                 }, () => {
                     this.runPolymorph();
                 });
