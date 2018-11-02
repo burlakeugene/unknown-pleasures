@@ -13,10 +13,21 @@ class JoyDivision{
                     document.querySelector(props.selector) : 
                     false,
             offset: {
-                x: (props && props.offset && props.offset.x) ? props.offset.x : 40,
-                y: (props && props.offset && props.offset.y) ? props.offset.y : 100,
-            },           
-            points: [],
+                top: (props && props.offset && props.offset.top) ? props.offset.top : 130,
+                left: (props && props.offset && props.offset.left) ? props.offset.left : 0,
+                right: (props && props.offset && props.offset.right) ? props.offset.right : 0,
+                bottom: (props && props.offset && props.offset.bottom) ? props.offset.bottom : 0,
+            },
+            size: {
+                width: (props && props.size && props.size.width) ? props.size.width : 470,
+                height: (props && props.size && props.size.height) ? props.size.height : 570,
+            },            
+            noiseСoefficient: {
+                low: (props && props.noiseСoefficient && props.noiseСoefficient.low) ? props.noiseСoefficient.low : 5,
+                middle: (props && props.noiseСoefficient && props.noiseСoefficient.middle) ? props.noiseСoefficient.middle : 50,
+                high: (props && props.noiseСoefficient && props.noiseСoefficient.high) ? props.noiseСoefficient.high : 150
+            },
+            points: []
         }
         this.intervals = {};
         this.init();
@@ -31,16 +42,22 @@ class JoyDivision{
     }
 
     calcRect(){
-        let {canvas, offset} = this.state;
+        let {
+                canvas, 
+                offset, 
+                size
+            } = this.state,
+            xStart = (canvas.clientWidth <= size.width) ? 10 : (canvas.clientWidth - size.width) / 2,
+            yStart = (canvas.clientHeight <= size.height) ? 10 : (canvas.clientHeight - size.height) / 2;
         this.setState({
             rect: {
                 x: {
-                    start: offset.x,
-                    end: canvas.clientWidth - offset.x
+                    start: xStart + offset.left,
+                    end: canvas.clientWidth - xStart + offset.right
                 },
                 y: {
-                    start: offset.y,
-                    end: canvas.clientHeight - offset.y
+                    start: yStart + offset.top,
+                    end: canvas.clientHeight - yStart + offset.bottom
                 }
             }
         })
@@ -136,15 +153,16 @@ class JoyDivision{
     }
 
     calcNoise(x, points){
-        let y = Math.random() * 5,
-            activePointStart = Math.floor(points / 4),
-            activePointEnd = activePointStart * 3,
+        let {noiseСoefficient} = this.state,
+            y = Math.random() * noiseСoefficient.low,
+            activePointStart = Math.floor(points / 5),
+            activePointEnd = activePointStart * 4,
             bigActivePointsStart = Math.floor(points / 3),
             bigActivePointEnd = bigActivePointsStart * 2;
         if(x > activePointStart && x < activePointEnd){
-            y = Math.random() * ((activePointStart + activePointEnd) / 5)
+            y = Math.random() * noiseСoefficient.middle;
             if(x > bigActivePointsStart && x < bigActivePointEnd){
-                y = y + Math.random() * 80;
+                y = Math.random() * noiseСoefficient.high;
             }
         }      
         return y;

@@ -9,5 +9,5 @@ let image = new JoyDivision({
     smooth: 6,
     lineWidth: 1.5,
     renderTime: 1000,
-    frames: 60,
+    frames: 60
 });
