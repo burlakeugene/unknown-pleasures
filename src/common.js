@@ -8,6 +8,6 @@ let image = new JoyDivision({
     linesCount: 50,    
     smooth: 6,
     lineWidth: 1.5,
-    renderTime: 1000,
+    renderTime: 1500,
     frames: 60
 });

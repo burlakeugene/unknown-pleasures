@@ -23,9 +23,8 @@ class JoyDivision{
                 height: (props && props.size && props.size.height) ? props.size.height : 570,
             },            
             noiseСoefficient: {
-                low: (props && props.noiseСoefficient && props.noiseСoefficient.low) ? props.noiseСoefficient.low : 5,
-                middle: (props && props.noiseСoefficient && props.noiseСoefficient.middle) ? props.noiseСoefficient.middle : 50,
-                high: (props && props.noiseСoefficient && props.noiseСoefficient.high) ? props.noiseСoefficient.high : 150
+                low: (props && props.noiseСoefficient && props.noiseСoefficient.low) ? props.noiseСoefficient.low : 8,
+                middle: (props && props.noiseСoefficient && props.noiseСoefficient.middle) ? props.noiseСoefficient.middle : 50
             },
             points: []
         }
@@ -155,15 +154,12 @@ class JoyDivision{
     calcNoise(x, points){
         let {noiseСoefficient} = this.state,
             y = Math.random() * noiseСoefficient.low,
-            activePointStart = Math.floor(points / 5),
-            activePointEnd = activePointStart * 4,
-            bigActivePointsStart = Math.floor(points / 3),
-            bigActivePointEnd = bigActivePointsStart * 2;
+            activePointStart = Math.floor(points / 3.5),
+            activePointEnd = activePointStart * 2.5;
         if(x > activePointStart && x < activePointEnd){
-            y = Math.random() * noiseСoefficient.middle;
-            if(x > bigActivePointsStart && x < bigActivePointEnd){
-                y = Math.random() * noiseСoefficient.high;
-            }
+            let random = Math.random();
+            random = random > 0.995 ? random * 8 : 1;
+            y = (Math.random()) * noiseСoefficient.middle * random;
         }      
         return y;
     }
